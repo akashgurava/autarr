@@ -1,24 +1,24 @@
+.git
+.github
+.gitlab
 node_modules
-
-# Output
+.pnpm-store
+.svelte-kit
+build
 .output
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
-/build
-.pnpm-store
 
-# OS
-.DS_Store
-Thumbs.db
+Dockerfile*
+docker-compose*.yml
 
-# Env
 .env
 .env.*
 !.env.example
 !.env.test
 
-# Vite
+.DS_Store
+Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

@@ -1,0 +1,18 @@
+
+services:
+  autarr-dev:
+    image: node:22-alpine
+    container_name: autarr-dev
+    hostname: autarr-dev
+    working_dir: /app
+    ports:
+      - "8066:8066"
+    environment:
+      # helpful when file watching inside some Docker environments
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./:/app:cached
+      # keep node modules isolated in container
+      - /app/node_modules
+    command: >
+      sh -c "corepack enable && corepack prepare pnpm@10.19.0 --activate && pnpm install && pnpm run dev"
