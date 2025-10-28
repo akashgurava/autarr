@@ -23,6 +23,10 @@ const BASE_PATH = normalizeBasePath(process.env.BASE_PATH);
 const config = {
 	preprocess: vitePreprocess(),
 
+	compilerOptions: {
+		runes: true
+	},
+
 	kit: {
 		// produce a static build (build/ by default)
 		adapter: adapter({
