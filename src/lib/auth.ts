@@ -1,26 +1,20 @@
 import { pb } from '$lib';
+import { type AuthModel, ClientResponseError } from 'pocketbase';
+import {
+	createSignUpError,
+	PasswordTooShortError,
+	PasswordsDoNotMatchError,
+	UnknownAuthError
+} from '$lib/error';
 
-export class UserExistsError extends Error {
-	readonly code = 'USER_EXISTS' as const;
-	constructor(message = 'Email is already registered') {
-		super(message);
-		this.name = 'UserExistsError';
-	}
-}
+// Re-export error utilities for convenience
+export { extractError } from '$lib/error';
 
+/**
+ * Normalize email address to lowercase and trim whitespace.
+ */
 function normalizeEmail(email: string): string {
 	return email.trim().toLowerCase();
-}
-
-export async function userExists(email: string): Promise<boolean> {
-	const e = normalizeEmail(email);
-	const v = e.replace(/"/g, '\\"');
-	try {
-		await pb.collection('users').getFirstListItem(`email = "${v}"`);
-		return true;
-	} catch {
-		return false;
-	}
 }
 
 export async function checkPocketBase(timeoutMs = 4000): Promise<boolean> {
@@ -35,13 +29,8 @@ export async function checkPocketBase(timeoutMs = 4000): Promise<boolean> {
 	}
 }
 
-function getAuthModel(store: unknown): unknown {
-	const s = store as { model?: unknown; record?: unknown };
-	return s.model ?? s.record;
-}
-
-export function subscribeAuth(cb: (isValid: boolean, model: unknown) => void) {
-	cb(pb.authStore.isValid, getAuthModel(pb.authStore));
+export function subscribeAuth(cb: (isValid: boolean, model: AuthModel) => void) {
+	cb(pb.authStore.isValid, pb.authStore.record);
 	return pb.authStore.onChange((_token, model) => {
 		cb(pb.authStore.isValid, model);
 	});
@@ -49,73 +38,58 @@ export function subscribeAuth(cb: (isValid: boolean, model: unknown) => void) {
 
 export async function signIn(email: string, password: string) {
 	const e = normalizeEmail(email);
-	return pb.collection('users').authWithPassword(e, password);
+	try {
+		const result = await pb.collection('users').authWithPassword(e, password);
+		return result;
+	} catch (err: unknown) {
+		if (err instanceof ClientResponseError) {
+			console.debug('SignIn error:', {
+				status: err.status,
+				message: err.message,
+				data: err.data
+			});
+			throw new Error(err.message || 'Sign in failed');
+		}
+		throw err instanceof Error ? err : new Error('Sign in failed');
+	}
 }
 
 export async function signUp(rawEmail: string, password: string, passwordConfirm: string) {
 	const email = normalizeEmail(rawEmail);
+
+	if (password.length < 8)
+		throw new PasswordTooShortError('Password must be at least 8 characters long');
+
+	if (password !== passwordConfirm) throw new PasswordsDoNotMatchError('Passwords do not match');
+
 	try {
-		await pb.collection('users').create({ email, password, passwordConfirm });
-	} catch (err) {
-		// Map PB duplicate email and field-level errors to a friendly domain error
-		const base = err as { message?: unknown; data?: unknown };
-		if (base && typeof base === 'object' && base.data && typeof base.data === 'object') {
-			const data = base.data as Record<string, unknown> & { email?: unknown };
-			if (
-				data.email &&
-				typeof data.email === 'object' &&
-				'message' in (data.email as Record<string, unknown>)
-			) {
-				const em = (data.email as { message?: unknown }).message;
-				if (typeof em === 'string' && /exist|already|in use/i.test(em))
-					throw new UserExistsError(em);
-			}
+		await pb.collection('users').create({
+			email,
+			password,
+			passwordConfirm,
+			emailVisibility: true
+		});
+	} catch (err: unknown) {
+		if (err instanceof ClientResponseError) {
+			console.debug('ClientResponseError:', {
+				status: err.status,
+				message: err.message,
+				data: err.data
+			});
+
+			throw createSignUpError(err);
 		}
-		// Fallback: if user now exists, surface a clear error; else rethrow
-		if (await userExists(email)) throw new UserExistsError();
-		throw err;
+
+		// Fallback for non-PocketBase errors
+		if (err instanceof Error) {
+			throw err;
+		}
+
+		throw new UnknownAuthError('Signup failed');
 	}
-	// Optional: sign-in after successful signup
-	return pb.collection('users').authWithPassword(email, password);
+	return await pb.collection('users').authWithPassword(email, password);
 }
 
 export function logout() {
 	pb.authStore.clear();
-}
-
-export function extractError(err: unknown): string {
-	const fallback = 'Authentication failed';
-
-	if (err instanceof UserExistsError) return err.message;
-	if (typeof err === 'string' && err.length) return err;
-	if (err && typeof err === 'object') {
-		const base = err as { message?: unknown; data?: unknown };
-		if (typeof base.message === 'string' && base.message.length) return base.message;
-		if (base.data && typeof base.data === 'object') {
-			const data = base.data as Record<string, unknown> & {
-				message?: unknown;
-				error?: unknown;
-				email?: unknown;
-			};
-			// Prefer field-level email message if present
-			if (
-				data.email &&
-				typeof data.email === 'object' &&
-				'message' in (data.email as Record<string, unknown>)
-			) {
-				const em = (data.email as { message?: unknown }).message;
-				if (typeof em === 'string' && em.length) return em;
-			}
-			const top = data.message ?? data.error;
-			if (typeof top === 'string' && top.length) return top;
-			for (const key of Object.keys(data)) {
-				const field = data[key];
-				if (field && typeof field === 'object' && 'message' in (field as Record<string, unknown>)) {
-					const fm = (field as { message?: unknown }).message;
-					if (typeof fm === 'string' && fm.length) return fm;
-				}
-			}
-		}
-	}
-	return fallback;
 }

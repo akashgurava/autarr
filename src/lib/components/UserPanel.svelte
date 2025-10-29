@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { theme } from '$lib/theme';
-	let { user, onLogout } = $props<{ user: unknown; onLogout: () => void }>();
+	import type { User } from '$lib/types';
+
+	let { user, onLogout } = $props<{ user: User | null; onLogout: () => void }>();
 </script>
 
 <div class="w-full max-w-2xl px-6">
