@@ -1,27 +1,45 @@
 <script lang="ts">
-	import { theme } from '$lib/theme';
 	import type { User } from '$lib/types';
+	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
 
 	let { user, onLogout } = $props<{ user: User | null; onLogout: () => void }>();
 </script>
 
 <div class="w-full max-w-2xl px-6">
-	<div
-		class={`rounded-md border p-4 text-sm ${$theme ? 'border-zinc-800 bg-zinc-900/40' : 'border-zinc-200 bg-white'}`}
-	>
-		<div><span class="font-medium">ID:</span> {user?.id}</div>
-		<div><span class="font-medium">Email:</span> {user?.email}</div>
-		<div><span class="font-medium">Verified:</span> {user?.verified ? 'yes' : 'no'}</div>
-		<div><span class="font-medium">Created:</span> {user?.created}</div>
-		<div><span class="font-medium">Updated:</span> {user?.updated}</div>
-	</div>
+	<Card>
+		<CardHeader>
+			<CardTitle>Account Information</CardTitle>
+			<CardDescription>Your profile details</CardDescription>
+		</CardHeader>
+		<CardContent class="space-y-3">
+			<div class="flex items-center justify-between text-sm">
+				<span class="text-muted-foreground">Email</span>
+				<span class="font-medium">{user?.email}</span>
+			</div>
+			<div class="flex items-center justify-between text-sm">
+				<span class="text-muted-foreground">Status</span>
+				<Badge variant={user?.verified ? 'default' : 'secondary'}>
+					{user?.verified ? 'Verified' : 'Unverified'}
+				</Badge>
+			</div>
+			<div class="flex items-center justify-between text-sm">
+				<span class="text-muted-foreground">User ID</span>
+				<code class="rounded bg-muted px-1.5 py-0.5 text-xs">{user?.id}</code>
+			</div>
+			<div class="flex items-center justify-between text-sm">
+				<span class="text-muted-foreground">Created</span>
+				<span class="text-xs">{user?.created}</span>
+			</div>
+			<div class="flex items-center justify-between text-sm">
+				<span class="text-muted-foreground">Updated</span>
+				<span class="text-xs">{user?.updated}</span>
+			</div>
+		</CardContent>
+	</Card>
 
 	<div class="mt-6 text-center">
-		<button
-			type="button"
-			onclick={onLogout}
-			class={`h-9 rounded-md px-4 text-sm font-medium ${$theme ? 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
-			>Logout</button
-		>
+		<Button variant="outline" onclick={onLogout}>Logout</Button>
 	</div>
 </div>

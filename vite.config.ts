@@ -5,6 +5,14 @@ import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+	build: {
+		// Target modern browsers but include some polyfills
+		target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+		// Enable minification
+		minify: 'esbuild',
+		// Source maps for debugging (removed in Dockerfile)
+		sourcemap: true
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

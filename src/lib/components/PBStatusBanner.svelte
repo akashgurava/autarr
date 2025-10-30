@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { env as publicEnv } from '$env/dynamic/public';
-	import { theme } from '$lib/theme';
 	import { pb } from '$lib';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
+	import { AlertCircle } from '@lucide/svelte';
 
 	let {
 		pbOnline = null,
@@ -15,23 +17,29 @@
 </script>
 
 {#if pbOnline === false}
-	<div class={`mb-4 rounded-md border ${$theme ? 'border-red-900/50 bg-red-900/20 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
-		<div class="px-3 py-2 text-xs">
-			<div class="font-medium">PocketBase is not reachable.</div>
-			<div class="mt-1 opacity-90">Resolved base URL: <code>{pb.baseURL}</code></div>
-			<div class="opacity-90">
-				PUBLIC_PB_URL: <code>{publicEnv.PUBLIC_PB_URL || '(not set)'}</code>
+	<Alert variant="destructive" class="mb-4">
+		<AlertCircle class="h-4 w-4" />
+		<AlertTitle>PocketBase is not reachable</AlertTitle>
+		<AlertDescription class="space-y-2">
+			<div class="text-xs opacity-90">
+				Resolved base URL: <code class="rounded bg-destructive/20 px-1 py-0.5">{pb.baseURL}</code>
+			</div>
+			<div class="text-xs opacity-90">
+				PUBLIC_PB_URL: <code class="rounded bg-destructive/20 px-1 py-0.5"
+					>{publicEnv.PUBLIC_PB_URL || '(not set)'}</code
+				>
 			</div>
 			<div class="mt-2">
-				<button
-					type="button"
-					class={`inline-flex items-center rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+				<Button
+					variant="outline"
+					size="sm"
 					onclick={onRetry}
 					disabled={checking}
+					class="h-7 text-xs"
 				>
 					{checking ? 'Checking…' : 'Retry'}
-				</button>
+				</Button>
 			</div>
-		</div>
-	</div>
+		</AlertDescription>
+	</Alert>
 {/if}

@@ -1,5 +1,20 @@
 import { ClientResponseError } from 'pocketbase';
 
+export class PocketBaseUnhealthyError extends Error {
+	readonly baseURL: string;
+	readonly error: ClientResponseError;
+	readonly status: number;
+
+	constructor(baseURL: string, error: ClientResponseError) {
+		super(`POCKETBASE_URL: ${baseURL}. Status: ${error.status}. Message: ${error.message}`);
+		this.name = 'PocketBaseUnhealthyError';
+
+		this.baseURL = baseURL;
+		this.error = error;
+		this.status = error.status;
+	}
+}
+
 export interface PocketBaseValidationError {
 	code: string;
 	message: string;

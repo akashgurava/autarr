@@ -26,9 +26,6 @@ export interface AuthFormState {
 	passwordConfirm: string;
 }
 
-// PocketBase Health Status
-export type PBHealthStatus = boolean | null;
-
 // Component Props Types
 export interface AuthFormProps {
 	mode?: 'signin' | 'signup';
@@ -41,7 +38,7 @@ export interface AuthFormProps {
 }
 
 export interface PBStatusBannerProps {
-	pbOnline?: PBHealthStatus;
+	pbOnline?: boolean;
 	checking?: boolean;
 	onRetry: () => void;
 }

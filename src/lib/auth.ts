@@ -17,18 +17,6 @@ function normalizeEmail(email: string): string {
 	return email.trim().toLowerCase();
 }
 
-export async function checkPocketBase(timeoutMs = 4000): Promise<boolean> {
-	const url = `${pb.baseURL}/api/health`;
-	const ctrl = new AbortController();
-	const t = setTimeout(() => ctrl.abort(), timeoutMs);
-	try {
-		const res = await fetch(url, { signal: ctrl.signal });
-		return res.ok;
-	} finally {
-		clearTimeout(t);
-	}
-}
-
 export function subscribeAuth(cb: (isValid: boolean, model: AuthModel) => void) {
 	cb(pb.authStore.isValid, pb.authStore.record);
 	return pb.authStore.onChange((_token, model) => {

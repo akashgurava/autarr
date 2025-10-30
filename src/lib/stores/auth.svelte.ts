@@ -3,9 +3,9 @@ import { browser } from '$app/environment';
 import type { User } from '$lib/types';
 
 class AuthStore {
-	isAuthenticated = $state(false);
 	user = $state<User | null>(null);
 	loading = $state(false);
+	isAuthenticated: boolean = $derived(this.user !== null);
 	private initialized = false;
 
 	constructor() {
@@ -20,14 +20,12 @@ class AuthStore {
 		this.initialized = true;
 
 		// Initialize from PocketBase authStore
-		this.isAuthenticated = pb.authStore.isValid;
 		this.user = pb.authStore.record as User | null;
 
-		// Subscribe to auth changes
-		pb.authStore.onChange((_, model) => {
-			this.isAuthenticated = pb.authStore.isValid;
-			this.user = model as User | null;
-		});
+		// // Subscribe to auth changes
+		// pb.authStore.onChange((_, model) => {
+		// 	this.user = model as User | null;
+		// });
 	}
 
 	setLoading(loading: boolean) {
@@ -37,7 +35,6 @@ class AuthStore {
 	clear() {
 		if (!browser) return;
 		pb.authStore.clear();
-		this.isAuthenticated = false;
 		this.user = null;
 	}
 }

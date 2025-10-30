@@ -1,22 +1,30 @@
-import { checkPocketBase } from '$lib/auth';
-import type { PBHealthStatus } from '$lib/types';
+import type PocketBase from 'pocketbase';
 
 export function usePocketBaseHealth() {
-	let status = $state<PBHealthStatus>(null);
+	let isPocketBaseOnline = $state<boolean>(false);
 	let checking = $state(false);
-	let error = $state<string | null>(null);
+	let error = $state<string>('');
 
-	async function check() {
+	async function check(pb: PocketBase) {
 		checking = true;
-		error = null;
+		error = '';
+
 		try {
-			const isOnline = await checkPocketBase();
-			status = isOnline;
-			if (!isOnline) {
-				error = 'PocketBase is unreachable';
+			const healthCheckResponse = await pb.health.check();
+			if (healthCheckResponse.code === 200) {
+				isPocketBaseOnline = true;
+				console.debug(
+					`[DEBUG][usePocketBaseHealth] CHECKED. isPocketBaseOnline: ${isPocketBaseOnline}.`
+				);
+			} else {
+				isPocketBaseOnline = false;
+				error = healthCheckResponse.message;
+				console.error(
+					`[ERROR][usePocketBaseHealth] CHECKED. code: ${healthCheckResponse.code}. message: ${healthCheckResponse.message}. data: ${healthCheckResponse.data}.`
+				);
 			}
 		} catch (err) {
-			status = false;
+			isPocketBaseOnline = false;
 			error = err instanceof Error ? err.message : 'Failed to check PocketBase health';
 		} finally {
 			checking = false;
@@ -24,8 +32,8 @@ export function usePocketBaseHealth() {
 	}
 
 	return {
-		get status() {
-			return status;
+		get isPocketBaseOnline() {
+			return isPocketBaseOnline;
 		},
 		get checking() {
 			return checking;
