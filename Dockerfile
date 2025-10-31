@@ -11,10 +11,13 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies with cache mount
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+  pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
+
+# Placeholder variable for build time
+ENV PB_URL=http://pocketbase:8090
 
 # Build the application
 RUN pnpm build
@@ -33,7 +36,7 @@ COPY --from=builder /app/pnpm-workspace.yaml ./
 # Install production dependencies only with cache mount
 RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+  pnpm install --prod --frozen-lockfile
 
 # Expose application port
 EXPOSE 3000

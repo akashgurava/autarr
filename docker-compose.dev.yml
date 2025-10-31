@@ -1,6 +1,7 @@
 services:
 
   app:
+    image: autarr:dev
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -10,14 +11,11 @@ services:
       - "5173:5173"
     volumes:
       # Mount source code for hot reload
-      - ./src:/app/src
-      - ./static:/app/static
-      - ./svelte.config.js:/app/svelte.config.js
-      - ./vite.config.ts:/app/vite.config.ts
-      - ./tsconfig.json:/app/tsconfig.json
-      # Exclude node_modules to use container's version
-      - /app/node_modules
-      - /app/.svelte-kit
+      - ./src:/app/src:ro
+      - ./static:/app/static:ro
+      - ./svelte.config.js:/app/svelte.config.js:ro
+      - ./vite.config.ts:/app/vite.config.ts:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
     environment:
       - NODE_ENV=development
       - POCKETBASE_URL=http://pocketbase:8090
@@ -39,5 +37,7 @@ services:
       start_period: 10s
 
 volumes:
+  autoarr_node_modules_dev:
+    name: autarr_node_modules_dev
   pocketbase_data_dev:
     name: autarr_pocketbase_dev

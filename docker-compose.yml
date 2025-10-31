@@ -1,6 +1,7 @@
 services:
 
   autarr:
+    image: autarr:latest
     build:
       context: .
       dockerfile: Dockerfile

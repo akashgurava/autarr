@@ -9,19 +9,17 @@ RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install dependencies with cache mount
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+VOLUME /app/src
 
-# Copy source code
-COPY . .
+# Install dependencies with cache mount
+RUN pnpm install --frozen-lockfile
 
 # Expose Vite dev server port
 EXPOSE 5173
 
 # Healthcheck: verify app health endpoint responds OK
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=10s \
-  CMD wget --spider -q http://localhost:5173/api/health || exit 1
+  CMD wget --spider -q http://127.0.0.1:5173/api/health || exit 1
 
 # Run dev server with host binding for Docker
 CMD ["pnpm", "dev", "--host", "0.0.0.0"]
